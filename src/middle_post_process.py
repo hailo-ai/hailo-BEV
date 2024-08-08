@@ -88,7 +88,7 @@ def post_proc(in_queue,out_queue, iterations_num, infinite_loop, post_proc_onnx_
     output_names = [x.name for x in sess_post_proc.get_outputs()]
 
     while True:
-        for i in range (0,iterations_num):
+        for i in range (iterations_num):
             transformer_output = in_queue.get()
             timest = timestamp[i]
 
@@ -457,7 +457,7 @@ def _format_bbox(results, sample, nusc) -> str:
             token = token + 1
     return result_annos
 
-def d3nms_proc(in_queue, out_queue,tok_queue, iterations_num, infinite_loop, nusc) -> None:
+def d3nms_proc(in_queue, out_queue, tok_queue, iterations_num, infinite_loop, nusc) -> None:
     """
     Perform 3D Non-Maximum Suppression (NMS) and annotation formatting for NuScenes dataset.
 

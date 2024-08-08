@@ -50,7 +50,7 @@ def bb_send(network_group, queue, infinite_loop) -> None:
             for _ in range(iterations_num):
                 for vstream in vstreams:
                     in_data = queue.get()
-                    input_data = np.transpose(in_data[0], (0, 2, 3, 1))# (0, 3, 1, 2)
+                    input_data = np.transpose(in_data[0], (0, 2, 3, 1)) # N C H W -> N H W C
                     input_data = np.ascontiguousarray(input_data)
                     vstream.send(input_data)
 
@@ -85,8 +85,8 @@ def bb_recv(network_group, queue, infinite_loop) -> None:
                     for vstream in vstreams:
                         output_data[vstream.name].append(vstream.recv())
 
-                result1 = np.transpose(np.array(output_data['petrv2_b0_backbone_x32_BN_q_304_dec_3_UN_800x320/conv31']), (0, 3, 1, 2))
-                result2 = np.transpose(np.array(output_data['petrv2_b0_backbone_x32_BN_q_304_dec_3_UN_800x320/conv29']), (0, 3, 1, 2))
+                result1 = np.transpose(np.array(output_data['petrv2_b0_backbone_x32_BN_q_304_dec_3_UN_800x320/conv31']), (0, 3, 1, 2)) #N H W C ->  N C H W
+                result2 = np.transpose(np.array(output_data['petrv2_b0_backbone_x32_BN_q_304_dec_3_UN_800x320/conv29']), (0, 3, 1, 2)) #N H W C ->  N C H W
 
                 queue.put((result1, result2)) # backbone output
 
@@ -114,11 +114,9 @@ def transformer_send(network_group, queue, infinite_loop) -> None:
     with InputVStreams(network_group, t_input_vstreams_params) as vstreams:
         while True:
             for _ in range(iterations_num):
-                j=0
                 in_data = queue.get()
-                for vstream in vstreams:
+                for j, vstream in enumerate(vstreams):
                     vstream.send(np.expand_dims(np.transpose(in_data[j], (1, 0, 2)), axis=0))
-                    j = j+1
 
             if not infinite_loop:
                 break
@@ -145,16 +143,14 @@ def transformer_recv(network_group,queue, infinite_loop) -> None:
     with OutputVStreams(network_group, t_output_vstreams_params) as vstreams:
         while True:
             for _ in range(iterations_num):
-                j=0
                 output_data = {}
                 for vstream in vstreams:
                     output_data[vstream.name] = vstream.recv()
-                    j = j + 1
-                    if j == 3:
-                        result=np.stack((output_data['petrv2_b0_transformer_x32_BN_q_304_dec_3_UN_800x320_const0/mul_and_add5'],
-                                         output_data['petrv2_b0_transformer_x32_BN_q_304_dec_3_UN_800x320_const0/mul_and_add10'],
-                                         output_data['petrv2_b0_transformer_x32_BN_q_304_dec_3_UN_800x320_const0/mul_and_add15']), axis=0)
-                        queue.put(result)
+
+                result=np.stack((output_data['petrv2_b0_transformer_x32_BN_q_304_dec_3_UN_800x320_const0/mul_and_add5'],
+                                    output_data['petrv2_b0_transformer_x32_BN_q_304_dec_3_UN_800x320_const0/mul_and_add10'],
+                                    output_data['petrv2_b0_transformer_x32_BN_q_304_dec_3_UN_800x320_const0/mul_and_add15']), axis=0)
+                queue.put(result)
 
             if not infinite_loop:
                 break
@@ -169,23 +165,23 @@ def configure_and_get_network_group(hef, target):
 
 def check_fps_range(value) -> Union[str, int]:
     """
-    Validate and return an integer FPS value within the range of 1 to 9 (inclusive).
+    Validate and return an integer FPS value within the range of 1 to 10 (inclusive).
 
     Args:
         value (str or int): The FPS value to validate.
 
     Returns:
-        int: Validated FPS value within the range of 1 to 9.
+        int: Validated FPS value within the range of 1 to 10.
     """
     ivalue = int(value)
-    if ivalue < 1 or ivalue > 9:
-        raise argparse.ArgumentTypeError(f"FPS must be between 1 and 9 (inclusive), got {value}")
+    if ivalue < 1 or ivalue > 10:
+        raise argparse.ArgumentTypeError(f"FPS must be between 1 and 10 (inclusive), got {value}")
     return ivalue
 
 def parse_args() -> argparse.Namespace:
     """Initialize argument parser for the script."""
     parser = argparse.ArgumentParser(description="BEV demo")
-    parser.add_argument("-f", "--fps", default=-1, type=check_fps_range, required=False, help="wanted FPS (1 - 9).")
+    parser.add_argument("-f", "--fps", default=-1, type=check_fps_range, required=False, help="wanted FPS (1 - 10).")
     parser.add_argument('--infinite-loop', action='store_true', help='run the demo in infinite loop.')
     parser.add_argument("-i", "--input", default="resources/input/", help="path to the input folder.")
     parser.add_argument("-m", "--models", default="resources/models/", help="path to the models folder.")
