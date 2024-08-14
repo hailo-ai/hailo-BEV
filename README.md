@@ -35,7 +35,7 @@ Usage
 
 1. Clone the repository:
     ```shell script
-    git clone git clone https://github.com/ronithailo/BEV_Demo.git
+    git clone https://github.com/hailo-ai/hailo-BEV.git
             
     cd BEV_Demo
     ```
@@ -128,7 +128,7 @@ Additional Notes
 
 License
 ----------
-The BEV Demo is released under the MIT license. Please see the https://github.com/ronithailo/BEV_Demo/LICENSE file for more information.
+The BEV Demo is released under the MIT license. Please see the https://github.com/hailo-ai/hailo-BEV/LICENSE file for more information.
 
 
 Disclaimer
