@@ -1,7 +1,7 @@
-BEV Demo
-========
+# BEV Demo
 
-This demo uses a Hailo-8 device with PETR to process 6 input images from nuScenes dataset.
+
+This demo uses a Hailo-8 device with PETRv2 to process 6 input images from nuScenes dataset.
 It annotates these images with 3D bounding boxes and creates Bird's Eye View (BEV) representations.
 
 ![Example](./resources/bev.gif)
@@ -16,22 +16,26 @@ It annotates these images with 3D bounding boxes and creates Bird's Eye View (BE
 </p>
 
 
-
 Pipeline
 --------
 
 ![Pipeline](./resources/pipeline.png)
 
+To more closely emulate a real application, run the demo with the 6 .jpg images from nuScenes.
+
+When running the demo with raw data (.npy files) input, memory usage will be higher, as .npy files are loaded into RAM.
+However, CPU usage will be lower because data loading does not occur in real time.
+
+
 Requirements
 ------------
 
-- hailo_platform==4.18.0
-- Pyhailort - Enable hailort service
-- mmdet3d.datasets 
+- hailo_platform==4.19.0
+- Pyhailort
 
 
-Usage
------
+# Install the Demo - X86
+-------------------------
 
 1. Clone the repository:
     ```shell script
@@ -41,6 +45,8 @@ Usage
     ```
 
 2. Install dependencies:
+
+    We recommend running it within a virtual environment.
     ```shell script
     pip install -r requirements.txt
     ```
@@ -51,84 +57,159 @@ Usage
     ```
 
 4. Data creation:
-    - Download the full dataset from https://www.nuscenes.org/nuscenes#download
-
-5. Visualize results:
-    To visualize results without running inference, use the following command:
-    ```shell script
-    ./src/visualize_results.py
-    ```
-
-    Arguments:
-
-    ``-f, --file``: scene data file path.
-
-    For more information:
-    ```shell script
-    ./src/visualize_results.py -h
-    ```
-    Example:
+    
+    Download the mini dataset from https://www.nuscenes.org/nuscenes#download
+    
+    To run the demo with **.jpg** input, use:
 
     ```shell script
-    ./src/visualize_results.py -f resources/results/scenes_data.json
+    ./src/common/prepare_data.py --data <path to nuScenes dataset>
+    ```
+    
+    To run the demo with **raw data** input, use:
+
+    ```shell script
+    ./src/common/prepare_data.py --data <path to nuScenes dataset> --raw-data
     ```
 
-Run Inference
+# Install the Demo - Embedded Architecture
+------------------------------------------
+
+1. Clone the repository both on the **host** and on the **platform**:
+    ```shell script
+    git clone https://github.com/hailo-ai/hailo-BEV.git
+            
+    cd BEV_Demo
+    ```
+
+2. Install dependencies both on the **host** and on the **platform**:
+
+    We recommend running it within a virtual environment.
+    ```shell script
+    pip install -r requirements.txt
+    ```
+
+3. Download demo resources on the platform only:
+    ```shell script
+    ./download_resources.sh
+    ```
+
+4. Data creation:
+    
+    Download the mini dataset from https://www.nuscenes.org/nuscenes#download
+    
+    **Execute this command on the **host** only:**
+    
+    To run the demo with **.jpg** input, use:
+
+    ```shell script
+    ./src/common/prepare_data.py --data <path to nuScenes dataset>
+    ```
+    
+    To run the demo with **raw data** input, use:
+
+    ```shell script
+    ./src/common/prepare_data.py --data <path to nuScenes dataset> --raw-data
+    ```
+    After running the command on the **host**, copy the /resources/input/ directory to the platform.
+    - **Note**: The /resources/input/ folder must be present on both the host and the platform.
+
+# Run Inference - X86
+---------------------
+To run inference, execute the following command from the repository's main folder:
+```shell script
+./src/x86/bev.py -d <data_path> --run-slow(optional)
+```
+For optimal visibility of 3D boxes, use the --run-slow flag. This will run the demo at 5 FPS. Since nuScenes samples were captured at 2 FPS, higher FPS values might obscure the 3D box display or create an illusion of faster vehicle movement.
+
+**Arguments**
+
+```shell script
+./src/x86/bev.py -h
+```
+
+- ``-i, --input``: Path to the input folder, Use this flag only if you have modified the default input folder location.
+- ``-m, --models``: Path to the models folder, Use this flag only if you have modified the default model folder location.
+- ``-d, --data``: Path to the data folder, where the nuScenes dataset is.
+- ``--run-slow``: Run the demo at 5 FPS for better visualization of 3D boxes.
+- ``--raw-data``: Run the demo from raw data for lower cpu usage.
+
+
+**Example**
+
+```shell script
+./src/x86/bev.py --run-slow
+```
+*Press Ctrl-C to stop the demo.*
+# Run Inference - Embedded Architecture
+-----------------------------------------
+
+Platform side
 -------------
 
-1. Cloning PETR repository:
-    ```shell script
-    git clone https://github.com/megvii-research/PETR.git && cd PETR && git checkout f7525f9
-    ```
-
-2. Pickle creation:
-    - To generate a pickle file for sweep data using the generate_sweep_pkl.py script from the PETR GitHub repository - 
-    https://github.com/megvii-research/PETR/blob/main/tools/generate_sweep_pkl.py
-
-3. Data preparation:
-    To prepare your data using the data_preparation script:
-    - Update Paths: Update all paths in the data_preparation.py script file to match your environment.
-
-        ```shell script
-        ./src/data_preparation.py -p <path to the PETR folder> -c <path to config_file.py>
-        ```
-    - Upon completion of the script, you will find .pt files generated as a result of the data preparation process.
-
-4. Run inference: 
-    ```shell script
-    ./src/bev.py -m <model_path> -i <input_path> -d <data_path> -f <wanted_FPS> --infinite-loop -n <number_of_scenes>
-    ```
-    For optimal visibility of 3D boxes, aim for an FPS range of 1 to 4. Higher FPS values might hinder clear observation, given that nuScenes samples were captured at 2 FPS. Higher FPS settings can create an illusion of faster vehicle movement.
-
-Arguments
----------
-- ``-f, --fps``: Wanted FPS (1 - 9). 
-- ``--infinite-loop``: Run the demo in infinite loop.
-- ``-i, --input``: path to the input folder, where all the .pt files are.
-- ``-m, --models``: path to the models folder.
-- ``-d, --data``: path to the data folder, where the nuScenes dataset is.
-- ``-n, --number-of-scenes``: number of scenes to run.
-
-For more information:
+To run inference, execute the following command from the repository's main folder:
 ```shell script
-./src/bev.py -h
+./src/embedded/platform/bev.py -d <data_path> --set-ip <platform ip> --set-port <communication port>(optional) --run-slow(optional)
 ```
-Example 
--------
-**Command**
+For optimal visibility of 3D boxes, use the --run-slow flag. This will run the demo at 5 FPS. Since nuScenes samples were captured at 2 FPS, higher FPS values might obscure the 3D box display or create an illusion of faster vehicle movement.
+
+
+**Arguments**
+
 ```shell script
-./src/bev.py --fps 5 -n 2
+./src/embedded/platform/bev.py -h
 ```
+
+- ``-i, --input``: Path to the input folder, Use this flag only if you have modified the default input folder location.
+- ``-m, --models``: Path to the models folder, Use this flag only if you have modified the default model folder location.
+- ``-d, --data``: Path to the data folder, where the nuScenes dataset is.
+- ``--run-slow``: Makes the demo run in 5 FPS.
+- ``--jpg-input``: Run the demo using .jpg data input, may require more CPU power.
+- ``--set-ip``: Set platform's ip.
+- ``--set-port``: Change the port from 5555 to another one.
+
+**Example**
+
+```shell script
+./src/embedded/platform/bev.py --set-ip <platform ip> --run-slow 
+```
+*Press Ctrl-C on the host size only to stop the demo.*
+
+Host side 
+----------
+Run the Host side only after you see "Listening on {ip}:{port}" on the platform side.
+
+Run visualization: 
+```shell script
+./src/embedded/host/viz.py -d <data_path> --set-ip <platform ip> --set-port <communication port>(optional)
+```
+
+**Arguments**
+```shell script
+./src/embedded/host/bev.py -h
+```
+
+- ``-d, --data``: Path to the data folder, where the nuScenes dataset is.
+- ``-i, --input``: Path to the input folder, Use this flag only if you have modified the default input folder location.
+- ``--set-ip``: Set platform's ip.
+- ``--set-port``: Change the port from 5555 to another one.
+
+
+**Example**
+
+```shell script
+./src/embedded/host/bev.py --set-ip <platform ip>
+```
+*Press Ctrl-C to stop the demo.*
 
 Additional Notes
 ----------------
-- The demo was only tested with ``HailoRT v4.18.0``
 - Ran the demo on: Dell PC (Model: Latitude 5431), with CPU (Model: 12th Gen Intel(R) Core(TM) i7-1270P).
 - All data is computed at runtime, except of the map, which is derived from the ground truth.
 
 License
 ----------
-The BEV Demo is released under the MIT license. Please see the https://github.com/hailo-ai/hailo-BEV/LICENSE file for more information.
+The BEV Demo is released under the MIT license. Please see the https://github.com/hailo-ai/hailo-BEV/blob/main/LICENSE file for more information.
 
 
 Disclaimer
