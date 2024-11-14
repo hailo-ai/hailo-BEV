@@ -173,7 +173,7 @@ For optimal visibility of 3D boxes, use the --run-slow flag. This will run the d
 ```shell script
 ./src/embedded/platform/bev.py --set-ip <platform ip> --run-slow 
 ```
-*Press Ctrl-C on the host size only to stop the demo.*
+*Press Ctrl-C on the host side only to stop the demo.*
 
 Host side 
 ----------
