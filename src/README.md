@@ -98,7 +98,7 @@ Requirements
     
     Download the mini dataset from https://www.nuscenes.org/nuscenes#download
     
-    to untar the v1.0-mini.tgz, use:
+    To untar the v1.0-mini.tgz, use:
 
     ```shell script
     tar -xvf v1.0-mini.tgz
