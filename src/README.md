@@ -41,7 +41,7 @@ Requirements
     ```shell script
     git clone https://github.com/hailo-ai/hailo-BEV.git
             
-    cd BEV_Demo
+    cd hailo-BEV
     ```
 
 2. Install dependencies:
@@ -89,16 +89,20 @@ Requirements
     pip install -r requirements.txt
     ```
 
-3. Download demo resources on the platform only:
+3. Download demo resources on the **platform** only:
     ```shell script
     ./download_resources.sh
     ```
 
-4. Data creation:
+4. Data creation on the **host** only:
     
     Download the mini dataset from https://www.nuscenes.org/nuscenes#download
     
-    **Execute this command on the **host** only:**
+    To untar the v1.0-mini.tgz, use:
+
+    ```shell script
+    tar -xvf v1.0-mini.tgz
+    ```
     
     To run the demo with **.jpg** input, use:
 
